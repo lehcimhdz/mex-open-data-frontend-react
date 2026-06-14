@@ -1,5 +1,5 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
-import { Slot } from "@radix-ui/react-slot";
+import { Slot, Slottable } from "@radix-ui/react-slot";
 import { cn } from "./utils";
 
 type Variant = "primary" | "secondary" | "ghost" | "link";
@@ -58,7 +58,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {...rest}
       >
         {leftIcon ? <span className="inline-flex">{leftIcon}</span> : null}
-        {children}
+        <Slottable>{children}</Slottable>
         {rightIcon ? <span className="inline-flex">{rightIcon}</span> : null}
       </Comp>
     );
