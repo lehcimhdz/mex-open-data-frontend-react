@@ -1,146 +1,266 @@
-import { Link, useParams } from "react-router-dom";
+import { useMemo } from "react";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { ArrowLeft, ExternalLink, Tags as TagsIcon } from "lucide-react";
 import { useDataset } from "../api/hooks";
+import { PageHero, PageShell } from "../ui/page";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs";
 import { Loader } from "../components/Loader";
 import { ErrorBox } from "../components/ErrorBox";
-import { PageHeader } from "../components/PageHeader";
-import { StatCard } from "../components/StatCard";
+import { Tag } from "../ui/tag";
+import { Card, CardBody, CardHeader } from "../ui/card";
+import { KPI } from "../ui/kpi";
 import { formatBytes, formatDate, formatNumber } from "../lib/format";
+import type { DatasetDetail, Resource } from "../api/types";
+import { EmptyState } from "../ui/empty-state";
+import { Button } from "../ui/button";
+import { DatasetEda } from "./_dataset/Eda";
+import { DatasetMl } from "./_dataset/Ml";
 
-const FORMAT_COLORS: Record<string, string> = {
-  csv: "bg-emerald-100 text-emerald-700",
-  xls: "bg-amber-100 text-amber-700",
-  xlsx: "bg-amber-100 text-amber-700",
-  zip: "bg-slate-200 text-slate-700",
-  pdf: "bg-red-100 text-red-700",
-  json: "bg-sky-100 text-sky-700",
-};
+type Tab = "resumen" | "recursos" | "eda" | "ml";
+const ALL_TABS: Tab[] = ["resumen", "recursos", "eda", "ml"];
 
-export default function DatasetDetailPage() {
+export default function DatasetDetailPage({
+  initialTab,
+}: {
+  initialTab?: Tab;
+} = {}) {
   const { slug } = useParams<{ slug: string }>();
   const { data, isLoading, error } = useDataset(slug);
-  if (isLoading) return <Loader />;
-  if (error) return <ErrorBox error={error} />;
+  const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  const tab = (params.get("tab") as Tab) ?? initialTab ?? "resumen";
+  const setTab = (t: string) => {
+    const next = new URLSearchParams(params);
+    if (t === "resumen") next.delete("tab");
+    else next.set("tab", t);
+    setParams(next, { replace: true });
+  };
+
+  if (isLoading)
+    return (
+      <PageShell width="wide">
+        <Loader />
+      </PageShell>
+    );
+  if (error)
+    return (
+      <PageShell width="wide">
+        <ErrorBox error={error} />
+      </PageShell>
+    );
   if (!data) return null;
 
-  const csvRes = data.resources.find((r) => (r.format || "").toLowerCase() === "csv");
+  const firstCsv = data.resources.find(
+    (r) => (r.format || "").toLowerCase() === "csv" && r.download_url
+  );
 
   return (
-    <div>
-      <PageHeader
+    <PageShell width="wide">
+      <PageHero
+        kicker={`dataset · ${data.category_slug ?? "—"}`}
         title={data.title}
         subtitle={data.description ?? undefined}
         actions={
           <>
-            {csvRes ? (
-              <Link
-                to={`/datasets/${slug}/eda`}
-                className="text-sm px-3 py-2 bg-brand-600 text-white rounded-md hover:bg-brand-700"
-              >
-                Abrir EDA
-              </Link>
-            ) : null}
-            {csvRes ? (
-              <Link
-                to={`/datasets/${slug}/ml`}
-                className="text-sm px-3 py-2 bg-slate-900 text-white rounded-md hover:bg-slate-700"
-              >
-                Insights ML
-              </Link>
+            <Button
+              variant="ghost"
+              size="md"
+              onClick={() => navigate(-1)}
+              leftIcon={<ArrowLeft size={14} />}
+            >
+              Volver
+            </Button>
+            {firstCsv?.download_url ? (
+              <Button asChild>
+                <a href={firstCsv.download_url} target="_blank" rel="noreferrer">
+                  Descargar CSV
+                </a>
+              </Button>
             ) : null}
           </>
         }
+        meta={
+          <span className="mono">
+            slug · {data.slug} · última actualización ·{" "}
+            {formatDate(data.last_updated)}
+          </span>
+        }
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <StatCard label="Slug" value={data.slug} />
-        <StatCard
+      <Tabs value={tab} onValueChange={setTab} className="mb-4">
+        <TabsList>
+          {ALL_TABS.map((t) => (
+            <TabsTrigger key={t} value={t}>
+              {LABELS[t]}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        <TabsContent value="resumen">
+          <SummaryTab data={data} />
+        </TabsContent>
+        <TabsContent value="recursos">
+          <ResourcesTab data={data} />
+        </TabsContent>
+        <TabsContent value="eda">
+          <DatasetEda data={data} />
+        </TabsContent>
+        <TabsContent value="ml">
+          <DatasetMl data={data} />
+        </TabsContent>
+      </Tabs>
+
+      <div className="text-xs text-[var(--text-muted)] mt-8 mono">
+        <Link to="/datasets" className="hover:text-[var(--text-strong)]">
+          ← Todos los datasets
+        </Link>
+      </div>
+    </PageShell>
+  );
+}
+
+const LABELS: Record<Tab, string> = {
+  resumen: "Resumen",
+  recursos: "Recursos",
+  eda: "EDA",
+  ml: "ML",
+};
+
+function SummaryTab({ data }: { data: DatasetDetail }) {
+  return (
+    <>
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <KPI
           label="Categoría"
           value={
-            data.category_name ? (
+            data.category_slug ? (
               <Link
-                to={`/categories/${data.category_slug}`}
-                className="text-brand-700 hover:underline"
+                to={`/categorias/${data.category_slug}`}
+                className="text-[var(--text-strong)] text-base"
               >
-                {data.category_name}
+                {data.category_name ?? data.category_slug}
               </Link>
             ) : (
-              data.category_slug ?? "—"
+              <span className="text-base">—</span>
             )
           }
         />
-        <StatCard
+        <KPI
           label="Organización"
-          value={data.organization ?? data.organization_name ?? "—"}
+          value={
+            <span className="text-base">
+              {data.organization ?? data.organization_name ?? "—"}
+            </span>
+          }
         />
-        <StatCard label="Última actualización" value={formatDate(data.last_updated)} />
-      </div>
+        <KPI label="Recursos" value={formatNumber(data.resources.length)} />
+        <KPI
+          label="Licencia"
+          value={<span className="text-base">{data.license_name ?? "—"}</span>}
+        />
+      </section>
 
       {data.tags && data.tags.length ? (
-        <div className="mb-6">
-          <h2 className="text-xs uppercase tracking-wider text-slate-500 mb-2">
-            Etiquetas
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {data.tags.map((t) => (
-              <span
-                key={t}
-                className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-700"
-              >
-                {t}
-              </span>
-            ))}
-          </div>
-        </div>
+        <Card className="mb-6">
+          <CardHeader title="Etiquetas" subtitle="Click para filtrar en /datasets" />
+          <CardBody>
+            <div className="flex flex-wrap gap-2">
+              {data.tags.map((t) => (
+                <Link
+                  key={t}
+                  to={`/datasets?q=${encodeURIComponent(t)}`}
+                  className="no-underline"
+                >
+                  <Tag
+                    variant="neutral"
+                    leftIcon={<TagsIcon size={12} aria-hidden="true" />}
+                  >
+                    {t}
+                  </Tag>
+                </Link>
+              ))}
+            </div>
+          </CardBody>
+        </Card>
       ) : null}
 
-      <section className="bg-white rounded-xl border border-slate-200">
-        <div className="p-4 border-b border-slate-200">
-          <h2 className="text-lg font-semibold text-slate-900">
-            Recursos ({formatNumber(data.resources.length)})
-          </h2>
-        </div>
-        <ul className="divide-y divide-slate-100">
-          {data.resources.map((r) => {
-            const fmt = (r.format || "").toLowerCase();
-            const colour = FORMAT_COLORS[fmt] ?? "bg-slate-100 text-slate-700";
-            return (
-              <li key={r.resource_id} className="p-4 hover:bg-slate-50">
-                <div className="flex justify-between gap-4 items-baseline">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-xs font-mono px-2 py-1 rounded ${colour}`}>
-                      {fmt || "?"}
-                    </span>
-                    <span className="font-medium text-slate-900">
-                      {r.name ?? r.resource_id}
-                    </span>
-                  </div>
-                  <span className="text-xs text-slate-500 whitespace-nowrap">
-                    {formatBytes(r.file_size)}
-                  </span>
-                </div>
-                <div className="mt-2 text-xs text-slate-500 flex gap-3 flex-wrap">
-                  <span className="font-mono">{r.resource_id}</span>
-                  {r.download_url ? (
-                    <a
-                      className="text-brand-700 hover:underline"
-                      href={r.download_url}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Descargar →
-                    </a>
-                  ) : null}
-                </div>
-              </li>
-            );
-          })}
-          {data.resources.length === 0 ? (
-            <li className="p-6 text-center text-sm text-slate-500">
-              Este dataset no tiene recursos cargados todavía.
-            </li>
-          ) : null}
-        </ul>
-      </section>
+      {data.description ? (
+        <Card>
+          <CardHeader title="Descripción" />
+          <CardBody className="prose prose-sm dark:prose-invert max-w-[72ch] serif text-[var(--text-default)]">
+            <p>{data.description}</p>
+          </CardBody>
+        </Card>
+      ) : null}
+    </>
+  );
+}
+
+function ResourcesTab({ data }: { data: DatasetDetail }) {
+  const groups = useMemo(() => {
+    const out: Record<string, Resource[]> = {};
+    for (const r of data.resources) {
+      const f = (r.format || "otros").toLowerCase();
+      out[f] = out[f] ?? [];
+      out[f].push(r);
+    }
+    return out;
+  }, [data.resources]);
+
+  if (!data.resources.length) {
+    return (
+      <EmptyState
+        title="Sin recursos"
+        description="Este dataset no tiene archivos asociados todavía."
+      />
+    );
+  }
+
+  return (
+    <div className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-1)]">
+      <ul className="divide-y divide-[var(--border-soft)]">
+        {data.resources.map((r) => (
+          <li
+            key={r.resource_id}
+            className="px-4 py-3 flex items-center gap-3 hover:bg-[var(--surface-2)] transition-colors"
+          >
+            <Tag
+              variant={(r.format || "").toLowerCase() === "csv" ? "accent" : "mono"}
+              size="sm"
+            >
+              {(r.format || "?").toUpperCase()}
+            </Tag>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm text-[var(--text-strong)] truncate">
+                {r.name ?? r.resource_id}
+              </div>
+              <div className="text-[11px] mono text-[var(--text-muted)] truncate">
+                {r.resource_id}
+              </div>
+            </div>
+            <div className="text-xs text-[var(--text-muted)] mono shrink-0">
+              {formatBytes(r.file_size)}
+            </div>
+            {r.download_url ? (
+              <a
+                href={r.download_url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-8 px-2.5 items-center gap-1 rounded-md border border-[var(--border-soft)] bg-[var(--surface-2)] hover:bg-[var(--surface-3)] text-xs text-[var(--text-strong)]"
+                aria-label={`Descargar ${r.name ?? r.resource_id}`}
+              >
+                Descargar <ExternalLink size={12} aria-hidden="true" />
+              </a>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+      <div className="px-4 py-2 border-t border-[var(--border-soft)] text-[11px] mono text-[var(--text-muted)]">
+        {Object.entries(groups)
+          .map(([fmt, list]) => `${fmt}: ${list.length}`)
+          .join("  ·  ")}
+      </div>
     </div>
   );
 }
