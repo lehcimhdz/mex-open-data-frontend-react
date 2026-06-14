@@ -31,6 +31,20 @@ export async function apiGet<T>(
   path: string,
   params?: Record<string, string | number | undefined>
 ): Promise<T> {
+  const { data } = await apiGetWithHeaders<T>(path, params);
+  return data;
+}
+
+export type ApiGetResult<T> = {
+  data: T;
+  totalCount: number | null;
+  nextCursor: string | null;
+};
+
+export async function apiGetWithHeaders<T>(
+  path: string,
+  params?: Record<string, string | number | undefined>
+): Promise<ApiGetResult<T>> {
   const url = buildUrl(path, params);
   const headers: Record<string, string> = { Accept: "application/json" };
   if (config.apiKey) headers["X-API-Key"] = config.apiKey;
@@ -50,5 +64,10 @@ export async function apiGet<T>(
         : `HTTP ${res.status}`) ?? `HTTP ${res.status}`;
     throw new ApiError(res.status, message, body);
   }
-  return body as T;
+  const totalRaw = res.headers.get("x-total-count");
+  return {
+    data: body as T,
+    totalCount: totalRaw ? Number(totalRaw) : null,
+    nextCursor: res.headers.get("x-next-cursor"),
+  };
 }

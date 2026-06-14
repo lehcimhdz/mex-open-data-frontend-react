@@ -1,51 +1,34 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Tags, Building2, Clock4, FileText } from "lucide-react";
-import { useCategories } from "../api/hooks";
+import { useCategories, useStats } from "../api/hooks";
 import { PageHero, PageShell } from "../ui/page";
 import { KPI } from "../ui/kpi";
-import { Sparkline } from "../ui/sparkline";
 import { Loader } from "../components/Loader";
 import { ErrorBox } from "../components/ErrorBox";
 import { CategoryTreemap } from "../components/CategoryTreemap";
 import { Button } from "../ui/button";
+import { Card, CardBody, CardHeader } from "../ui/card";
 import { formatNumber, formatDate } from "../lib/format";
 
-function fakeSparkline(seed: number, length = 24): number[] {
-  // Deterministic pseudo-random sparkline so the home doesn't look static.
-  let s = seed >>> 0 || 1;
-  const out: number[] = [];
-  for (let i = 0; i < length; i++) {
-    s = (s * 1664525 + 1013904223) >>> 0;
-    out.push((s % 1000) / 1000);
-  }
-  return out;
-}
-
 export default function HomePage() {
-  const { data, isLoading, error } = useCategories();
+  const cats = useCategories();
+  const stats = useStats();
 
-  if (isLoading)
+  if (cats.isLoading || stats.isLoading)
     return (
       <PageShell width="wide">
         <Loader />
       </PageShell>
     );
-  if (error)
+  if (cats.error)
     return (
       <PageShell width="wide">
-        <ErrorBox error={error} />
+        <ErrorBox error={cats.error} />
       </PageShell>
     );
 
-  const categories = data ?? [];
-  const sorted = [...categories].sort(
-    (a, b) => (b.dataset_count ?? 0) - (a.dataset_count ?? 0)
-  );
-  const totalDatasets = categories.reduce((s, c) => s + (c.dataset_count ?? 0), 0);
-  const totalCategories = categories.length;
-  const latestUpdate = categories
-    .map((c) => (c.updated_at ? new Date(c.updated_at).getTime() : 0))
-    .reduce((m, t) => Math.max(m, t), 0);
+  const categories = cats.data ?? [];
+  const s = stats.data;
 
   return (
     <PageShell width="wide">
@@ -63,28 +46,24 @@ export default function HomePage() {
       <section className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
         <KPI
           label="Datasets"
-          value={formatNumber(totalDatasets)}
-          helper="Indexados ahora"
-          chart={<Sparkline values={fakeSparkline(totalDatasets)} stroke="var(--viz-quiet)" />}
+          value={formatNumber(s?.datasets ?? 0)}
+          helper={`${formatNumber(s?.fresh_30d ?? 0)} en los últimos 30 d`}
         />
         <KPI
           label="Categorías"
-          value={formatNumber(totalCategories)}
+          value={formatNumber(s?.categories ?? categories.length)}
           helper="Temas activos"
-          chart={<Sparkline values={fakeSparkline(totalCategories + 17)} stroke="var(--viz-quiet)" />}
         />
         <KPI
-          label="Top categoría"
-          value={sorted[0]?.name ?? "—"}
-          helper={`${formatNumber(sorted[0]?.dataset_count ?? 0)} datasets`}
-          tone="accent"
-          chart={<Sparkline values={fakeSparkline((sorted[0]?.dataset_count ?? 1) + 3)} stroke="var(--color-accent-600)" />}
+          label="Organizaciones"
+          value={formatNumber(s?.organizations ?? 0)}
+          helper="Instituciones publicadoras"
         />
         <KPI
           label="Última actualización"
-          value={latestUpdate ? formatDate(new Date(latestUpdate).toISOString()) : "—"}
-          helper="En el catálogo"
-          chart={<Sparkline values={fakeSparkline(latestUpdate || 42)} stroke="var(--viz-quiet)" />}
+          value={s?.latest_update ? formatDate(s.latest_update) : "—"}
+          helper={`${formatNumber(s?.resources ?? 0)} recursos en total`}
+          tone="accent"
         />
       </section>
 
@@ -102,9 +81,76 @@ export default function HomePage() {
         </div>
         <p className="text-sm text-[var(--text-muted)] mb-4 max-w-2xl">
           Cada rectángulo es una categoría temática; su tamaño es proporcional
-          al número de datasets publicados. Click para entrar.
+          al número de datasets publicados. La más grande lleva acento.
         </p>
         <CategoryTreemap categories={categories} />
+      </section>
+
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-10">
+        <Card>
+          <CardHeader title="Categorías más ricas" subtitle="Por número de datasets" />
+          <CardBody className="p-0">
+            <ul className="divide-y divide-[var(--border-soft)]">
+              {(s?.top_categories ?? []).map((c, i) => (
+                <li key={c.slug}>
+                  <Link
+                    to={`/categorias/${c.slug}`}
+                    className="px-4 py-2.5 flex items-center gap-3 hover:bg-[var(--surface-2)]"
+                  >
+                    <span className="w-5 text-[11px] mono text-[var(--text-muted)]">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="flex-1 text-sm text-[var(--text-strong)] truncate">
+                      {c.name}
+                    </span>
+                    <span className="text-xs mono text-[var(--text-muted)]">
+                      {formatNumber(c.count)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+              {(s?.top_categories ?? []).length === 0 ? (
+                <li className="px-4 py-3 text-xs text-[var(--text-muted)]">
+                  Pendiente — corre el pipeline para llenar la BD.
+                </li>
+              ) : null}
+            </ul>
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardHeader
+            title="Top organizaciones"
+            subtitle="Las instituciones que más publican"
+          />
+          <CardBody className="p-0">
+            <ul className="divide-y divide-[var(--border-soft)]">
+              {(s?.top_organizations ?? []).map((o, i) => (
+                <li key={o.slug}>
+                  <Link
+                    to={`/datasets?organization=${encodeURIComponent(o.slug)}`}
+                    className="px-4 py-2.5 flex items-center gap-3 hover:bg-[var(--surface-2)]"
+                  >
+                    <span className="w-5 text-[11px] mono text-[var(--text-muted)]">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="flex-1 text-sm text-[var(--text-strong)] truncate">
+                      {o.name}
+                    </span>
+                    <span className="text-xs mono text-[var(--text-muted)]">
+                      {formatNumber(o.count)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+              {(s?.top_organizations ?? []).length === 0 ? (
+                <li className="px-4 py-3 text-xs text-[var(--text-muted)]">
+                  Pendiente — el pipeline aún no sincronizó organizaciones.
+                </li>
+              ) : null}
+            </ul>
+          </CardBody>
+        </Card>
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-10">
@@ -113,7 +159,7 @@ export default function HomePage() {
             label: "Por tema",
             icon: <Tags size={18} aria-hidden="true" />,
             to: "/categorias",
-            desc: "Recorre los 28 temas en los que se organiza la información pública.",
+            desc: "Recorre las 28 áreas temáticas en las que se organiza la información pública.",
           },
           {
             label: "Por organización",
@@ -131,7 +177,7 @@ export default function HomePage() {
           <Link
             key={tile.label}
             to={tile.to}
-            className="group rounded-lg border border-[var(--border-soft)] bg-[var(--surface-1)] p-5 hover:border-[var(--border-strong)] transition-colors"
+            className="group rounded-lg border border-[var(--border-soft)] bg-[var(--surface-1)] p-5 hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] transition-colors"
           >
             <div className="flex items-start gap-3">
               <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-[var(--surface-2)] text-[var(--text-muted)] group-hover:text-[var(--text-strong)]">
@@ -149,38 +195,6 @@ export default function HomePage() {
         ))}
       </section>
 
-      <section className="mb-6">
-        <div className="flex items-baseline justify-between mb-3">
-          <h2 className="text-base font-semibold text-[var(--text-strong)] serif">
-            Saltos rápidos
-          </h2>
-          <span className="text-xs text-[var(--text-muted)] mono">
-            ⌘K para buscar
-          </span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-          {sorted.slice(0, 12).map((c) => (
-            <Link
-              key={c.slug}
-              to={`/categorias/${c.slug}`}
-              className="group block rounded-md border border-[var(--border-soft)] bg-[var(--surface-1)] px-3 py-2.5 hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]"
-            >
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="text-sm font-medium text-[var(--text-strong)] truncate">
-                  {c.name}
-                </span>
-                <span className="text-[10px] mono text-[var(--text-muted)]">
-                  {formatNumber(c.dataset_count ?? 0)}
-                </span>
-              </div>
-              <div className="text-[10px] mono text-[var(--text-muted)] mt-0.5 truncate">
-                {c.slug}
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
       <section className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-1)] p-5 flex flex-wrap items-center gap-4">
         <FileText size={20} className="text-[var(--text-muted)]" aria-hidden="true" />
         <div className="flex-1 min-w-[260px]">
@@ -188,8 +202,8 @@ export default function HomePage() {
             ¿Buscas un dataset específico?
           </h3>
           <p className="text-xs text-[var(--text-muted)] mt-1">
-            La búsqueda full-text vive en <code className="mono text-[var(--text-default)]">/datasets</code> con
-            filtros por categoría y formato. O abre la paleta de comandos con{" "}
+            La búsqueda full-text y los filtros viven en{" "}
+            <code className="mono text-[var(--text-default)]">/datasets</code>. O abre la paleta de comandos con{" "}
             <kbd className="mono text-[var(--text-default)]">⌘K</kbd>.
           </p>
         </div>

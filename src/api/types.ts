@@ -46,3 +46,17 @@ export type Organization = {
   created?: string | null;
   url?: string | null;
 };
+
+export type StatsTopItem = { slug: string; name: string; count: number };
+
+export type Stats = {
+  datasets: number;
+  categories: number;
+  organizations: number;
+  resources: number;
+  fresh_30d: number;
+  latest_update: string | null;
+  top_categories: StatsTopItem[];
+  top_organizations: StatsTopItem[];
+  format_breakdown: StatsTopItem[];
+};

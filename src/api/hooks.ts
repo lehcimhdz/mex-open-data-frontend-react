@@ -1,6 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import { apiGet } from "./client";
-import type { Category, Dataset, DatasetDetail, Organization, Resource } from "./types";
+import { apiGet, apiGetWithHeaders } from "./client";
+import type {
+  Category,
+  Dataset,
+  DatasetDetail,
+  Organization,
+  Resource,
+  Stats,
+} from "./types";
 
 export function useHealth() {
   return useQuery({
@@ -75,10 +82,47 @@ export function useSearch(
   });
 }
 
-export function useOrganizations() {
+export function useOrganizations(opts: { limit?: number; offset?: number } = {}) {
   return useQuery({
-    queryKey: ["organizations"],
-    queryFn: () => apiGet<Organization[]>("/organizations"),
+    queryKey: ["organizations", opts],
+    queryFn: () =>
+      apiGet<Organization[]>("/organizations", {
+        limit: opts.limit ?? 200,
+        offset: opts.offset,
+      }),
     retry: false,
+  });
+}
+
+export function useStats() {
+  return useQuery({
+    queryKey: ["stats"],
+    queryFn: () => apiGet<Stats>("/stats"),
+    staleTime: 60_000,
+  });
+}
+
+export type DatasetListOpts = {
+  category?: string;
+  organization?: string;
+  format?: string;
+  sort?: "recent" | "title" | "slug";
+  limit?: number;
+  offset?: number;
+};
+
+export function useDatasetList(opts: DatasetListOpts = {}) {
+  return useQuery({
+    queryKey: ["dataset-list", opts],
+    queryFn: () =>
+      apiGetWithHeaders<Dataset[]>("/datasets", {
+        category: opts.category,
+        organization: opts.organization,
+        format: opts.format,
+        sort: opts.sort ?? "recent",
+        limit: opts.limit ?? 50,
+        offset: opts.offset ?? 0,
+      }),
+    placeholderData: (prev) => prev,
   });
 }
