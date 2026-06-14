@@ -18,8 +18,24 @@ import { correlationMatrix, profileColumn, type ColumnProfile } from "../../lib/
 import { Sparkline } from "../../ui/sparkline";
 import type { DatasetDetail } from "../../api/types";
 import { Tag } from "../../ui/tag";
+import { apiGet, ApiError } from "../../api/client";
+import type { ResourcePreview } from "../../api/hooks";
 
 const MAX_ROWS = 2000;
+
+function autoType(v: string): unknown {
+  if (v === "" || v === null || v === undefined) return null;
+  const trimmed = v.trim();
+  if (trimmed === "") return null;
+  // booleans
+  if (/^(true|false)$/i.test(trimmed)) return trimmed.toLowerCase() === "true";
+  // number
+  if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
+    const n = Number(trimmed);
+    if (Number.isFinite(n)) return n;
+  }
+  return trimmed;
+}
 
 export function DatasetEda({ data }: { data: DatasetDetail }) {
   const csvResource = useMemo(
@@ -41,22 +57,65 @@ export function DatasetEda({ data }: { data: DatasetDetail }) {
     setParseError(null);
     setSelectedCol(null);
     if (!csvResource || !csvResource.download_url) return;
+
+    let cancelled = false;
     setParsing(true);
-    Papa.parse(csvResource.download_url, {
-      download: true,
-      header: true,
-      skipEmptyLines: true,
-      preview: MAX_ROWS,
-      dynamicTyping: true,
-      complete: (result) => {
-        setRows(result.data as Record<string, unknown>[]);
+
+    // 1) Try the backend preview first — bypasses CORS + encoding issues.
+    const tryBackend = async () => {
+      try {
+        const preview = await apiGet<ResourcePreview>(
+          `/resources/${csvResource.resource_id}/preview`,
+          { rows: MAX_ROWS }
+        );
+        if (cancelled) return;
+        const cols = preview.columns;
+        const out = preview.rows.map((r) => {
+          const o: Record<string, unknown> = {};
+          for (let i = 0; i < cols.length; i++) o[cols[i]] = autoType(r[i] ?? "");
+          return o;
+        });
+        setRows(out);
         setParsing(false);
-      },
-      error: (err) => {
-        setParseError(err.message ?? "Error al parsear el CSV");
-        setParsing(false);
-      },
+        return true;
+      } catch (exc) {
+        // 404/415 from backend → fall through to client-side parse.
+        if (exc instanceof ApiError && (exc.status === 404 || exc.status === 415)) {
+          return false;
+        }
+        // 5xx or network → still try client-side as a last resort.
+        return false;
+      }
+    };
+
+    // 2) Fallback: PapaParse directly from the upstream URL.
+    const tryClient = () => {
+      Papa.parse(csvResource.download_url!, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        preview: MAX_ROWS,
+        dynamicTyping: true,
+        complete: (result) => {
+          if (cancelled) return;
+          setRows(result.data as Record<string, unknown>[]);
+          setParsing(false);
+        },
+        error: (err) => {
+          if (cancelled) return;
+          setParseError(err.message ?? "Error al parsear el CSV");
+          setParsing(false);
+        },
+      });
+    };
+
+    tryBackend().then((ok) => {
+      if (!ok && !cancelled) tryClient();
     });
+
+    return () => {
+      cancelled = true;
+    };
   }, [csvResource]);
 
   const profiles: ColumnProfile[] = useMemo(() => {

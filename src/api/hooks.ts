@@ -126,3 +126,23 @@ export function useDatasetList(opts: DatasetListOpts = {}) {
     placeholderData: (prev) => prev,
   });
 }
+
+export type ResourcePreview = {
+  resource_id: string;
+  columns: string[];
+  rows: string[][];
+  row_count?: number;
+  truncated?: boolean;
+  delimiter?: string;
+  bytes?: number;
+};
+
+export function useResourcePreview(rid: string | undefined, rows = 200) {
+  return useQuery({
+    queryKey: ["resource-preview", rid, rows],
+    queryFn: () =>
+      apiGet<ResourcePreview>(`/resources/${rid}/preview`, { rows }),
+    enabled: !!rid,
+    retry: false,
+  });
+}
