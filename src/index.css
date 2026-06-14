@@ -1,38 +1,199 @@
 @import "tailwindcss";
 
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/source-serif-4";
+@import "@fontsource-variable/jetbrains-mono";
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Tokens — single source of truth. Light is the default; dark inverts the
+   ink ramp into night-*. Accent and viz colours stay identical across modes.
+   ───────────────────────────────────────────────────────────────────────── */
 @theme {
-  --color-mex-green: #006847;
-  --color-mex-white: #ffffff;
-  --color-mex-red: #ce1126;
-  --color-brand-50: #ecfdf5;
-  --color-brand-100: #d1fae5;
-  --color-brand-500: #10b981;
-  --color-brand-600: #059669;
-  --color-brand-700: #047857;
-  --font-sans:
-    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    sans-serif;
+  /* Warm stone neutrals */
+  --color-ink-0: #fafaf7;
+  --color-ink-1: #f3f1ec;
+  --color-ink-2: #e7e4dc;
+  --color-ink-3: #cbc7bd;
+  --color-ink-5: #8b867b;
+  --color-ink-7: #4a463d;
+  --color-ink-9: #1c1a16;
+
+  --color-night-0: #0c0a09;
+  --color-night-1: #17150f;
+  --color-night-2: #221f17;
+  --color-night-3: #36322a;
+  --color-night-5: #6f6a5e;
+  --color-night-7: #b8b3a8;
+  --color-night-9: #ece9e0;
+
+  /* Accent — cinnabar */
+  --color-accent-50: #fef3ee;
+  --color-accent-100: #fde0d0;
+  --color-accent-300: #f59669;
+  --color-accent-500: #d35327;
+  --color-accent-600: #bc3908;
+  --color-accent-700: #9a2c06;
+
+  /* Semantics */
+  --color-good: #15803d;
+  --color-warn: #b45309;
+  --color-bad: #b91c1c;
+  --color-info: #1d4ed8;
+
+  /* Qualitative viz ramp */
+  --color-viz-1: #1c1a16;
+  --color-viz-2: #bc3908;
+  --color-viz-3: #0f766e;
+  --color-viz-4: #6d28d9;
+  --color-viz-5: #be123c;
+  --color-viz-6: #4b5563;
+
+  /* Fonts */
+  --font-display: "Inter Variable", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Source Serif 4 Variable", ui-serif, Georgia, serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SFMono-Regular",
+    "Menlo", monospace;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Semantic surface tokens. Components consume *these*, not the raw ramps.
+   ───────────────────────────────────────────────────────────────────────── */
+:root,
+[data-theme="light"] {
+  --surface-0: var(--color-ink-0);
+  --surface-1: #ffffff;
+  --surface-2: var(--color-ink-1);
+  --surface-3: var(--color-ink-2);
+  --border-soft: var(--color-ink-2);
+  --border-strong: var(--color-ink-3);
+  --text-strong: var(--color-ink-9);
+  --text-default: var(--color-ink-7);
+  --text-muted: var(--color-ink-5);
+  --text-inverse: var(--color-ink-0);
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --surface-0: var(--color-night-0);
+  --surface-1: var(--color-night-1);
+  --surface-2: var(--color-night-2);
+  --surface-3: var(--color-night-3);
+  --border-soft: var(--color-night-2);
+  --border-strong: var(--color-night-3);
+  --text-strong: var(--color-night-9);
+  --text-default: var(--color-night-7);
+  --text-muted: var(--color-night-5);
+  --text-inverse: var(--color-night-0);
+
+  color-scheme: dark;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Base styles
+   ───────────────────────────────────────────────────────────────────────── */
 html,
 body,
 #root {
   height: 100%;
 }
 
-body {
-  font-family: var(--font-sans);
+html {
+  background: var(--surface-0);
+  color: var(--text-strong);
 }
 
-/* Subtle scrollbars */
+body {
+  font-family: var(--font-display);
+  font-feature-settings: "ss01", "cv11";
+  background: var(--surface-0);
+  color: var(--text-strong);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-accent-100);
+  color: var(--color-accent-700);
+}
+
+/* Editorial serif headings get tighter tracking */
+.serif {
+  font-family: var(--font-serif);
+  font-feature-settings: "lnum", "ss01";
+  letter-spacing: -0.01em;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-feature-settings: "ss03";
+}
+
+.numeric {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Default link colour */
+a {
+  color: var(--color-accent-600);
+  text-decoration-color: transparent;
+  text-underline-offset: 0.15em;
+  transition: text-decoration-color 0.15s ease-out;
+}
+a:hover {
+  text-decoration-color: var(--color-accent-600);
+  text-decoration-line: underline;
+}
+
+/* Focus ring — visible, branded, never disabled */
+:focus-visible {
+  outline: 2px solid var(--color-accent-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Scrollbars — quiet stone */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgb(148 163 184 / 0.5);
+  background: color-mix(in oklab, var(--color-ink-3) 60%, transparent);
   border-radius: 6px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgb(100 116 139 / 0.7);
+  background: color-mix(in oklab, var(--color-ink-5) 60%, transparent);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--color-night-5) 60%, transparent);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Skeleton shimmer */
+@keyframes skeleton {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--surface-2) 100%, transparent) 0%,
+    color-mix(in oklab, var(--surface-3) 100%, transparent) 50%,
+    color-mix(in oklab, var(--surface-2) 100%, transparent) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton 1.4s ease-in-out infinite;
+  border-radius: 6px;
 }

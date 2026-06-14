@@ -1,17 +1,30 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Open Data México · Explorer</title>
+    <meta name="theme-color" content="#fafaf7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0c0a09" media="(prefers-color-scheme: dark)" />
+    <title>MX Open · Datos abiertos del gobierno de México</title>
     <meta
       name="description"
-      content="Explora todos los datos abiertos del gobierno de México con gráficas, EDA y modelos de Machine Learning."
+      content="Explora los datos abiertos del gobierno de México con tableros, análisis exploratorio y modelos."
     />
+    <script>
+      // Prevent FOUC by setting the theme before any paint.
+      (() => {
+        try {
+          const stored = localStorage.getItem("mxod-theme");
+          const sys = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          const t = stored === "light" || stored === "dark" ? stored : sys;
+          document.documentElement.dataset.theme = t;
+        } catch {}
+      })();
+    </script>
     <script src="/env-config.js"></script>
   </head>
-  <body class="bg-slate-50 text-slate-900 antialiased">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
