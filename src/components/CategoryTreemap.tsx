@@ -3,14 +3,23 @@ import { Link } from "react-router-dom";
 import { squarify } from "../lib/treemap";
 import type { Category } from "../api/types";
 
-const PALETTE = [
-  "var(--color-viz-1)",
-  "var(--color-viz-2)",
-  "var(--color-viz-3)",
-  "var(--color-viz-4)",
-  "var(--color-viz-5)",
-  "var(--color-viz-6)",
-];
+// Monochrome stone ramp — the largest (index 0) gets the cinnabar accent so
+// the eye lands there. Everything else uses graduated neutral tones.
+function colourFor(index: number, total: number): { bg: string; text: string } {
+  if (index === 0) {
+    return { bg: "var(--color-accent-600)", text: "var(--color-ink-0)" };
+  }
+  // Map remaining rectangles linearly from a darker to a lighter stone tone.
+  const t = total <= 2 ? 0.5 : (index - 1) / Math.max(total - 2, 1);
+  const stops = [
+    { bg: "var(--ramp-1)", text: "var(--ramp-text-light)" },
+    { bg: "var(--ramp-2)", text: "var(--ramp-text-light)" },
+    { bg: "var(--ramp-3)", text: "var(--ramp-text-dark)" },
+    { bg: "var(--ramp-4)", text: "var(--ramp-text-dark)" },
+  ];
+  const idx = Math.min(stops.length - 1, Math.floor(t * stops.length));
+  return stops[idx];
+}
 
 export function CategoryTreemap({
   categories,
@@ -43,10 +52,14 @@ export function CategoryTreemap({
   );
 
   return (
-    <div ref={ref} className="relative w-full overflow-hidden rounded-lg border border-[var(--border-soft)] bg-[var(--surface-1)]" style={{ height }}>
+    <div
+      ref={ref}
+      className="relative w-full overflow-hidden rounded-lg border border-[var(--border-soft)] bg-[var(--surface-1)] treemap"
+      style={{ height }}
+    >
       {rects.map((r, i) => {
         const fontSize = r.h < 28 ? 0 : Math.min(r.w / 8, 18);
-        const colour = PALETTE[i % PALETTE.length];
+        const { bg, text } = colourFor(i, rects.length);
         return (
           <Link
             key={r.data.slug}
@@ -57,18 +70,18 @@ export function CategoryTreemap({
           >
             <div
               className="absolute inset-px rounded-[2px] transition-transform group-hover:scale-[0.985] group-focus-visible:scale-[0.985] group-hover:shadow-md"
-              style={{ background: colour, color: "var(--color-ink-0)" }}
+              style={{ background: bg, color: text }}
             >
               {fontSize > 9 ? (
-                <div className="absolute inset-0 p-2 flex flex-col justify-end leading-tight">
+                <div className="absolute inset-0 p-2.5 flex flex-col justify-end leading-tight">
                   <div
                     className="font-medium truncate"
-                    style={{ fontSize, color: "var(--color-ink-0)" }}
+                    style={{ fontSize, color: text }}
                   >
                     {r.data.name}
                   </div>
                   <div
-                    className="opacity-80 mono"
+                    className="opacity-70 mono"
                     style={{ fontSize: Math.max(fontSize * 0.55, 9) }}
                   >
                     {r.data.dataset_count ?? 0}

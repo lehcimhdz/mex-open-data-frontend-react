@@ -56,7 +56,7 @@ export default function OrganizationsPage() {
         {orgs.map((o) => (
           <Card
             key={o.slug}
-            className="p-4 hover:border-[var(--color-accent-500)] transition-colors"
+            className="p-4 hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] transition-colors"
           >
             <div className="flex justify-between items-baseline gap-2">
               <h2 className="text-sm font-semibold text-[var(--text-strong)] truncate">

@@ -127,22 +127,37 @@ export function Shell({ children }: { children: React.ReactNode }) {
       </main>
 
       <footer className="border-t border-[var(--border-soft)] bg-[var(--surface-1)]">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-6 flex flex-wrap gap-3 justify-between text-[11px] mono text-[var(--text-muted)]">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-6 flex flex-wrap gap-x-6 gap-y-2 justify-between text-[11px] mono text-[var(--text-muted)]">
           <span>
-            Fuente · {" "}
-            <a className="underline" href="https://www.datos.gob.mx/" target="_blank" rel="noreferrer">
+            Fuente ·{" "}
+            <a
+              className="hover:text-[var(--text-strong)]"
+              href="https://www.datos.gob.mx/"
+              target="_blank"
+              rel="noreferrer"
+            >
               datos.gob.mx
             </a>
           </span>
           <span>
             Librería ·{" "}
-            <a className="underline" href="https://pypi.org/project/open-data-mexico/" target="_blank" rel="noreferrer">
+            <a
+              className="hover:text-[var(--text-strong)]"
+              href="https://pypi.org/project/open-data-mexico/"
+              target="_blank"
+              rel="noreferrer"
+            >
               open-data-mexico
             </a>
           </span>
           <span>
             Repo ·{" "}
-            <a className="underline" href="https://github.com/lehcimhdz/mex-open-data-frontend-react" target="_blank" rel="noreferrer">
+            <a
+              className="hover:text-[var(--text-strong)]"
+              href="https://github.com/lehcimhdz/mex-open-data-frontend-react"
+              target="_blank"
+              rel="noreferrer"
+            >
               mex-open-data-frontend-react
             </a>
           </span>

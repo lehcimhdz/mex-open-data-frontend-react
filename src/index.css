@@ -72,6 +72,15 @@
   --text-muted: var(--color-ink-5);
   --text-inverse: var(--color-ink-0);
 
+  /* Stone-only ramp for quiet viz (treemap, sparklines, donuts, sequential bars) */
+  --ramp-1: var(--color-ink-9);
+  --ramp-2: var(--color-ink-7);
+  --ramp-3: var(--color-ink-3);
+  --ramp-4: var(--color-ink-2);
+  --ramp-text-light: var(--color-ink-0);
+  --ramp-text-dark: var(--color-ink-9);
+  --viz-quiet: var(--color-ink-5);
+
   color-scheme: light;
 }
 
@@ -86,6 +95,14 @@
   --text-default: var(--color-night-7);
   --text-muted: var(--color-night-5);
   --text-inverse: var(--color-night-0);
+
+  --ramp-1: var(--color-night-9);
+  --ramp-2: var(--color-night-7);
+  --ramp-3: var(--color-night-3);
+  --ramp-4: var(--color-night-2);
+  --ramp-text-light: var(--color-night-0);
+  --ramp-text-dark: var(--color-night-9);
+  --viz-quiet: var(--color-night-5);
 
   color-scheme: dark;
 }
@@ -134,15 +151,24 @@ body {
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-/* Default link colour */
+/* Anchors inherit colour by default — components decide when to accent. */
 a {
-  color: var(--color-accent-600);
+  color: inherit;
   text-decoration-color: transparent;
   text-underline-offset: 0.15em;
-  transition: text-decoration-color 0.15s ease-out;
+  transition: text-decoration-color 0.15s ease-out, color 0.15s ease-out;
 }
 a:hover {
-  text-decoration-color: var(--color-accent-600);
+  text-decoration-color: currentColor;
+  text-decoration-line: underline;
+}
+
+/* Opt-in accented link */
+.link-accent {
+  color: var(--color-accent-600);
+}
+.link-accent:hover {
+  color: var(--color-accent-700);
   text-decoration-line: underline;
 }
 

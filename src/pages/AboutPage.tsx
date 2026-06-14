@@ -21,15 +21,15 @@ export default function AboutPage() {
         </p>
         <p>
           La cadena de datos arranca en la librería{" "}
-          <a href="https://pypi.org/project/open-data-mexico/" target="_blank" rel="noreferrer">
+          <a className="link-accent" href="https://pypi.org/project/open-data-mexico/" target="_blank" rel="noreferrer">
             <code className="mono">open-data-mexico</code>
           </a>{" "}
           (PyPI), pasa por el pipeline Airflow (
-          <a href="https://github.com/lehcimhdz/mex-open-data-pipeline" target="_blank" rel="noreferrer">
+          <a className="link-accent" href="https://github.com/lehcimhdz/mex-open-data-pipeline" target="_blank" rel="noreferrer">
             <code className="mono">mex-open-data-pipeline</code>
           </a>
           ), aterriza en S3 + Postgres y se sirve por la API FastAPI (
-          <a href="https://github.com/lehcimhdz/mex-open-data-backend-fastapi" target="_blank" rel="noreferrer">
+          <a className="link-accent" href="https://github.com/lehcimhdz/mex-open-data-backend-fastapi" target="_blank" rel="noreferrer">
             <code className="mono">mex-open-data-backend-fastapi</code>
           </a>
           ). Este frontend es la última capa.

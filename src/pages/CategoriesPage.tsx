@@ -81,7 +81,7 @@ export default function CategoriesPage() {
               <Link
                 key={c.slug}
                 to={`/categorias/${c.slug}`}
-                className="group rounded-lg border border-[var(--border-soft)] bg-[var(--surface-1)] p-4 hover:border-[var(--color-accent-500)] transition-colors"
+                className="group rounded-lg border border-[var(--border-soft)] bg-[var(--surface-1)] p-4 hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] transition-colors"
               >
                 <div className="flex items-baseline justify-between gap-2">
                   <h3 className="text-sm font-semibold text-[var(--text-strong)] truncate">
@@ -91,9 +91,9 @@ export default function CategoriesPage() {
                     {formatNumber(c.dataset_count ?? 0)}
                   </span>
                 </div>
-                <div className="h-1 rounded-full bg-[var(--surface-3)] mt-3 overflow-hidden">
+                <div className="h-[3px] rounded-full bg-[var(--surface-3)] mt-3 overflow-hidden">
                   <div
-                    className="h-full bg-[var(--color-accent-500)] group-hover:bg-[var(--color-accent-600)] transition-colors"
+                    className="h-full bg-[var(--text-default)] group-hover:bg-[var(--color-accent-600)] transition-colors"
                     style={{ width: `${Math.max(2, pct)}%` }}
                   />
                 </div>

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Sparkles, Tags, Building2, Clock4, FileText } from "lucide-react";
+import { ArrowRight, Tags, Building2, Clock4, FileText } from "lucide-react";
 import { useCategories } from "../api/hooks";
 import { PageHero, PageShell } from "../ui/page";
 import { KPI } from "../ui/kpi";
@@ -7,6 +7,7 @@ import { Sparkline } from "../ui/sparkline";
 import { Loader } from "../components/Loader";
 import { ErrorBox } from "../components/ErrorBox";
 import { CategoryTreemap } from "../components/CategoryTreemap";
+import { Button } from "../ui/button";
 import { formatNumber, formatDate } from "../lib/format";
 
 function fakeSparkline(seed: number, length = 24): number[] {
@@ -53,11 +54,10 @@ export default function HomePage() {
         title={
           <>
             Datos abiertos del gobierno de México,
-            <br className="hidden sm:inline" />{" "}
-            <span className="text-[var(--color-accent-600)]">explorables sin trámite.</span>
+            <br className="hidden sm:inline" /> explorables sin trámite.
           </>
         }
-        subtitle="Catálogos, esquemas y archivos publicados por instituciones federales, organizados para curiosos, periodistas y analistas. Cero verde, mucha data."
+        subtitle="Catálogos, esquemas y archivos publicados por instituciones federales, organizados para curiosos, periodistas y analistas."
       />
 
       <section className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
@@ -65,25 +65,26 @@ export default function HomePage() {
           label="Datasets"
           value={formatNumber(totalDatasets)}
           helper="Indexados ahora"
-          chart={<Sparkline values={fakeSparkline(totalDatasets)} stroke="var(--color-accent-600)" />}
+          chart={<Sparkline values={fakeSparkline(totalDatasets)} stroke="var(--viz-quiet)" />}
         />
         <KPI
           label="Categorías"
           value={formatNumber(totalCategories)}
           helper="Temas activos"
-          chart={<Sparkline values={fakeSparkline(totalCategories + 17)} stroke="var(--color-viz-3)" />}
+          chart={<Sparkline values={fakeSparkline(totalCategories + 17)} stroke="var(--viz-quiet)" />}
         />
         <KPI
           label="Top categoría"
           value={sorted[0]?.name ?? "—"}
           helper={`${formatNumber(sorted[0]?.dataset_count ?? 0)} datasets`}
-          chart={<Sparkline values={fakeSparkline((sorted[0]?.dataset_count ?? 1) + 3)} stroke="var(--color-viz-4)" />}
+          tone="accent"
+          chart={<Sparkline values={fakeSparkline((sorted[0]?.dataset_count ?? 1) + 3)} stroke="var(--color-accent-600)" />}
         />
         <KPI
           label="Última actualización"
           value={latestUpdate ? formatDate(new Date(latestUpdate).toISOString()) : "—"}
           helper="En el catálogo"
-          chart={<Sparkline values={fakeSparkline(latestUpdate || 42)} stroke="var(--color-viz-5)" />}
+          chart={<Sparkline values={fakeSparkline(latestUpdate || 42)} stroke="var(--viz-quiet)" />}
         />
       </section>
 
@@ -94,7 +95,7 @@ export default function HomePage() {
           </h2>
           <Link
             to="/categorias"
-            className="text-sm text-[var(--text-default)] hover:text-[var(--text-strong)] inline-flex items-center gap-1"
+            className="text-sm text-[var(--text-muted)] hover:text-[var(--text-strong)] inline-flex items-center gap-1"
           >
             Todas las categorías <ArrowRight size={14} aria-hidden="true" />
           </Link>
@@ -130,16 +131,16 @@ export default function HomePage() {
           <Link
             key={tile.label}
             to={tile.to}
-            className="group rounded-lg border border-[var(--border-soft)] bg-[var(--surface-1)] p-5 hover:border-[var(--color-accent-600)] transition-colors"
+            className="group rounded-lg border border-[var(--border-soft)] bg-[var(--surface-1)] p-5 hover:border-[var(--border-strong)] transition-colors"
           >
             <div className="flex items-start gap-3">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-[var(--surface-2)] text-[var(--text-default)] group-hover:bg-[var(--color-accent-50)] group-hover:text-[var(--color-accent-700)]">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-[var(--surface-2)] text-[var(--text-muted)] group-hover:text-[var(--text-strong)]">
                 {tile.icon}
               </span>
               <div className="flex-1">
                 <div className="text-sm font-semibold text-[var(--text-strong)] inline-flex items-center gap-1">
                   Explora {tile.label}{" "}
-                  <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-[var(--text-muted)]" />
                 </div>
                 <p className="text-xs text-[var(--text-muted)] mt-1.5">{tile.desc}</p>
               </div>
@@ -162,7 +163,7 @@ export default function HomePage() {
             <Link
               key={c.slug}
               to={`/categorias/${c.slug}`}
-              className="group block rounded-md border border-[var(--border-soft)] bg-[var(--surface-1)] px-3 py-2.5 hover:border-[var(--color-accent-500)]"
+              className="group block rounded-md border border-[var(--border-soft)] bg-[var(--surface-1)] px-3 py-2.5 hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]"
             >
               <div className="flex items-baseline justify-between gap-2">
                 <span className="text-sm font-medium text-[var(--text-strong)] truncate">
@@ -180,25 +181,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-1)] p-6 flex items-center gap-4">
-        <FileText size={22} className="text-[var(--color-accent-600)]" aria-hidden="true" />
-        <div className="flex-1">
+      <section className="rounded-lg border border-[var(--border-soft)] bg-[var(--surface-1)] p-5 flex flex-wrap items-center gap-4">
+        <FileText size={20} className="text-[var(--text-muted)]" aria-hidden="true" />
+        <div className="flex-1 min-w-[260px]">
           <h3 className="text-sm font-semibold text-[var(--text-strong)]">
             ¿Buscas un dataset específico?
           </h3>
           <p className="text-xs text-[var(--text-muted)] mt-1">
-            La búsqueda full-text vive en <code className="mono">/datasets</code> con
+            La búsqueda full-text vive en <code className="mono text-[var(--text-default)]">/datasets</code> con
             filtros por categoría y formato. O abre la paleta de comandos con{" "}
-            <kbd className="mono">⌘K</kbd>.
+            <kbd className="mono text-[var(--text-default)]">⌘K</kbd>.
           </p>
         </div>
-        <Link
-          to="/datasets"
-          className="inline-flex h-9 px-3 items-center rounded-md text-sm bg-[var(--color-accent-600)] text-[var(--color-ink-0)] hover:bg-[var(--color-accent-700)]"
-        >
-          Ir a datasets <ArrowRight size={14} className="ml-1" />
-        </Link>
-        <Sparkles size={20} className="text-[var(--text-muted)] hidden sm:block" aria-hidden="true" />
+        <Button asChild rightIcon={<ArrowRight size={14} aria-hidden="true" />}>
+          <Link to="/datasets">Ir a datasets</Link>
+        </Button>
       </section>
     </PageShell>
   );

@@ -36,7 +36,7 @@ export function PageHero({
   return (
     <header className="border-b border-[var(--border-soft)] py-8 mb-8">
       {kicker ? (
-        <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-accent-700)] dark:text-[var(--color-accent-300)] mb-2 font-medium mono">
+        <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--text-muted)] mb-2 font-medium mono">
           {kicker}
         </div>
       ) : null}
