@@ -4,6 +4,9 @@ import type {
   Category,
   Dataset,
   DatasetDetail,
+  EdaIndex,
+  EdaProfile,
+  EdaSample,
   Organization,
   Resource,
   Stats,
@@ -144,5 +147,34 @@ export function useResourcePreview(rid: string | undefined, rows = 200) {
       apiGet<ResourcePreview>(`/resources/${rid}/preview`, { rows }),
     enabled: !!rid,
     retry: false,
+  });
+}
+
+export function useEdaProfile(slug: string | undefined) {
+  return useQuery({
+    queryKey: ["eda-profile", slug],
+    queryFn: () => apiGet<EdaProfile>(`/datasets/${slug}/eda`),
+    enabled: !!slug,
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useEdaSample(slug: string | undefined) {
+  return useQuery({
+    queryKey: ["eda-sample", slug],
+    queryFn: () => apiGet<EdaSample>(`/datasets/${slug}/eda/sample`),
+    enabled: !!slug,
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useEdaIndex() {
+  return useQuery({
+    queryKey: ["eda-index"],
+    queryFn: () => apiGet<EdaIndex>("/eda/stats"),
+    retry: false,
+    staleTime: 60_000,
   });
 }

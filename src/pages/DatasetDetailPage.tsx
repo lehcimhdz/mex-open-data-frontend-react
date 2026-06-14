@@ -13,7 +13,7 @@ import { formatBytes, formatDate, formatNumber } from "../lib/format";
 import type { DatasetDetail, Resource } from "../api/types";
 import { EmptyState } from "../ui/empty-state";
 import { Button } from "../ui/button";
-import { DatasetEda } from "./_dataset/Eda";
+import { DatasetEdaServerSide } from "./_dataset/EdaServerSide";
 import { DatasetMl } from "./_dataset/Ml";
 
 type Tab = "resumen" | "recursos" | "eda" | "ml";
@@ -104,7 +104,7 @@ export default function DatasetDetailPage({
           <ResourcesTab data={data} />
         </TabsContent>
         <TabsContent value="eda">
-          <DatasetEda data={data} />
+          <DatasetEdaServerSide data={data} />
         </TabsContent>
         <TabsContent value="ml">
           <DatasetMl data={data} />
