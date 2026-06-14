@@ -6,7 +6,6 @@ import { PageHero, PageShell } from "../ui/page";
 import { Loader } from "../components/Loader";
 import { ErrorBox } from "../components/ErrorBox";
 import { formatNumber, truncate } from "../lib/format";
-import { IconButton } from "../ui/icon-button";
 
 type View = "grid" | "table";
 
