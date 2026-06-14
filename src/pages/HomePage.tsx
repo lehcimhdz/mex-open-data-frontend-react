@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Tags, Building2, Clock4, FileText } from "lucide-react";
-import { useCategories, useStats } from "../api/hooks";
+import { useCategories, useDatasetList, useStats } from "../api/hooks";
 import { PageHero, PageShell } from "../ui/page";
 import { KPI } from "../ui/kpi";
 import { Loader } from "../components/Loader";
@@ -8,11 +8,13 @@ import { ErrorBox } from "../components/ErrorBox";
 import { CategoryTreemap } from "../components/CategoryTreemap";
 import { Button } from "../ui/button";
 import { Card, CardBody, CardHeader } from "../ui/card";
-import { formatNumber, formatDate } from "../lib/format";
+import { Skeleton } from "../ui/skeleton";
+import { formatNumber, formatDate, truncate } from "../lib/format";
 
 export default function HomePage() {
   const cats = useCategories();
   const stats = useStats();
+  const recent = useDatasetList({ sort: "recent", limit: 10 });
 
   if (cats.isLoading || stats.isLoading)
     return (
@@ -84,6 +86,63 @@ export default function HomePage() {
           al número de datasets publicados. La más grande lleva acento.
         </p>
         <CategoryTreemap categories={categories} />
+      </section>
+
+      <section className="mb-10">
+        <Card>
+          <CardHeader
+            title="Recientemente actualizados"
+            subtitle="Los 10 datasets cuya última edición es más reciente en el catálogo"
+            actions={
+              <Link
+                to="/datasets?sort=recent"
+                className="text-xs text-[var(--text-muted)] hover:text-[var(--text-strong)] inline-flex items-center gap-1"
+              >
+                Ver más <ArrowRight size={12} aria-hidden="true" />
+              </Link>
+            }
+          />
+          <CardBody className="p-0">
+            {recent.isLoading ? (
+              <div className="p-4 flex flex-col gap-2">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-10 w-full" />
+                ))}
+              </div>
+            ) : recent.error || !recent.data?.data?.length ? (
+              <div className="px-4 py-6 text-sm text-[var(--text-muted)]">
+                Sin datos recientes todavía.
+              </div>
+            ) : (
+              <ul className="divide-y divide-[var(--border-soft)]">
+                {recent.data.data.map((d) => (
+                  <li key={d.slug}>
+                    <Link
+                      to={`/datasets/${d.slug}`}
+                      className="px-4 py-3 flex flex-wrap items-baseline gap-x-3 gap-y-1 hover:bg-[var(--surface-2)] transition-colors"
+                    >
+                      <span className="flex-1 min-w-[180px] text-sm font-medium text-[var(--text-strong)] truncate">
+                        {d.title}
+                      </span>
+                      <span className="text-[11px] mono text-[var(--text-muted)] shrink-0">
+                        {formatDate(d.last_updated)}
+                      </span>
+                      <span className="basis-full text-[11px] mono text-[var(--text-muted)] flex gap-2 truncate">
+                        <span className="truncate">{d.slug}</span>
+                        {d.category_slug ? (
+                          <span>· {d.category_name ?? d.category_slug}</span>
+                        ) : null}
+                        {d.organization ? (
+                          <span className="truncate">· {truncate(d.organization, 40)}</span>
+                        ) : null}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardBody>
+        </Card>
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-10">
