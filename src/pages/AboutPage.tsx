@@ -1,55 +1,90 @@
-import { PageHeader } from "../components/PageHeader";
+import { Link } from "react-router-dom";
+import { PageHero, PageShell } from "../ui/page";
+import { Card, CardBody } from "../ui/card";
 
 export default function AboutPage() {
   return (
-    <div className="prose prose-slate max-w-3xl">
-      <PageHeader
-        title="Acerca de Open Data México · Explorer"
-        subtitle="Pieza visual del ecosistema mex-open-data."
+    <PageShell width="prose">
+      <PageHero
+        kicker="acerca"
+        title="MX Open · Datos abiertos del gobierno de México"
+        subtitle="Pieza visual del ecosistema mex-open-data. Convierte el catálogo de datos.gob.mx en tableros, EDA y modelos sin pedir trámite a nadie."
       />
-      <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4 text-sm text-slate-700">
+      <div className="serif text-[var(--text-default)] text-base leading-relaxed space-y-5">
         <p>
-          Este frontend en React consume el backend{" "}
-          <code>mex-open-data-backend-fastapi</code>, que a su vez lee de
-          PostgreSQL los datos hidratados por el pipeline Airflow. Toda la
-          conexión con <code>datos.gob.mx</code> pasa por la librería{" "}
-          <code>open-data-mexico</code> (PyPI 1.2.0).
+          La identidad visual usa <strong>neutros stone</strong> y un acento{" "}
+          <span className="text-[var(--color-accent-600)]">cinabrio</span> — el
+          pigmento sagrado mesoamericano que el diseño mexicano moderno
+          (Barragán, Casa Estudio, museos contemporáneos) volvió a poner en
+          circulación. Salimos del verde de la bandera porque la voz que
+          queremos no es la de una intranet.
         </p>
-        <h2 className="text-base font-semibold text-slate-900">
-          Cómo conectar el frontend con el backend
-        </h2>
-        <pre className="bg-slate-900 text-slate-100 text-xs p-3 rounded overflow-x-auto">
-          <code>{`# 1) Levanta el backend en localhost:18000
-docker compose up -d mexdata-backend mexdata-postgres mexdata-redis
+        <p>
+          La cadena de datos arranca en la librería{" "}
+          <a href="https://pypi.org/project/open-data-mexico/" target="_blank" rel="noreferrer">
+            <code className="mono">open-data-mexico</code>
+          </a>{" "}
+          (PyPI), pasa por el pipeline Airflow (
+          <a href="https://github.com/lehcimhdz/mex-open-data-pipeline" target="_blank" rel="noreferrer">
+            <code className="mono">mex-open-data-pipeline</code>
+          </a>
+          ), aterriza en S3 + Postgres y se sirve por la API FastAPI (
+          <a href="https://github.com/lehcimhdz/mex-open-data-backend-fastapi" target="_blank" rel="noreferrer">
+            <code className="mono">mex-open-data-backend-fastapi</code>
+          </a>
+          ). Este frontend es la última capa.
+        </p>
+      </div>
 
-# 2) Apunta el frontend al backend
+      <Card className="mt-8">
+        <CardBody>
+          <h2 className="text-sm font-semibold text-[var(--text-strong)] mb-3">
+            Cómo conectarlo
+          </h2>
+          <pre className="bg-[var(--color-ink-9)] text-[var(--color-ink-0)] dark:bg-[var(--color-night-9)] dark:text-[var(--color-night-0)] mono text-xs p-3 rounded overflow-x-auto leading-relaxed">
+            <code>{`docker compose up -d mexdata-backend mexdata-postgres mexdata-redis
+
 VITE_API_BASE_URL=http://localhost:18000 \\
 VITE_API_KEY=optional-key \\
 npm run dev`}</code>
-        </pre>
-        <h2 className="text-base font-semibold text-slate-900">Variables de entorno</h2>
-        <ul className="list-disc list-inside space-y-1">
-          <li>
-            <code>VITE_API_BASE_URL</code> — URL del backend (default: <code>/api</code>,
-            con el proxy de Vite hacia <code>localhost:18000</code>).
-          </li>
-          <li>
-            <code>VITE_API_KEY</code> — opcional. Sólo si el backend tiene
-            <code> API_KEY_REQUIRED=true</code>.
-          </li>
-        </ul>
-        <h2 className="text-base font-semibold text-slate-900">Páginas disponibles</h2>
-        <ul className="list-disc list-inside space-y-1">
-          <li><b>Inicio</b> — métricas globales y barras por categoría.</li>
-          <li><b>Categorías</b> — grid completo de las 28 categorías temáticas.</li>
-          <li><b>Detalle de categoría</b> — datasets dentro de una categoría con histograma.</li>
-          <li><b>Detalle de dataset</b> — metadatos, recursos y atajos a EDA/ML.</li>
-          <li><b>EDA</b> — perfil por columna, histogramas y matriz de correlación.</li>
-          <li><b>ML</b> — K-Means (k=4) + proyección PCA + tabla de centroides.</li>
-          <li><b>Búsqueda</b> — full-text con filtros de categoría y formato.</li>
-          <li><b>Organizaciones</b> — instituciones publicadoras (cuando el backend las expone).</li>
-        </ul>
-      </div>
-    </div>
+          </pre>
+          <ul className="text-sm text-[var(--text-default)] mt-4 list-disc list-inside space-y-1">
+            <li>
+              <code className="mono">VITE_API_BASE_URL</code> — default{" "}
+              <code className="mono">/api</code>, con el proxy de Vite hacia{" "}
+              <code className="mono">localhost:18000</code>.
+            </li>
+            <li>
+              <code className="mono">VITE_API_KEY</code> — sólo si el backend
+              tiene <code className="mono">API_KEY_REQUIRED=true</code>.
+            </li>
+          </ul>
+        </CardBody>
+      </Card>
+
+      <Card className="mt-6">
+        <CardBody>
+          <h2 className="text-sm font-semibold text-[var(--text-strong)] mb-3">
+            Atajos de teclado
+          </h2>
+          <ul className="text-sm text-[var(--text-default)] grid grid-cols-2 gap-y-1.5 gap-x-6">
+            <li><kbd className="mono">⌘K</kbd> — paleta de comandos</li>
+            <li><kbd className="mono">g h</kbd> — Inicio</li>
+            <li><kbd className="mono">g c</kbd> — Categorías</li>
+            <li><kbd className="mono">g d</kbd> — Datasets</li>
+            <li><kbd className="mono">g o</kbd> — Organizaciones</li>
+            <li><kbd className="mono">g a</kbd> — Acerca</li>
+          </ul>
+        </CardBody>
+      </Card>
+
+      <p className="text-xs text-[var(--text-muted)] mt-6">
+        ¿Bug o sugerencia?{" "}
+        <Link to="/" className="hover:text-[var(--text-strong)]">
+          Vuelve al inicio
+        </Link>{" "}
+        o abre un issue en el repo.
+      </p>
+    </PageShell>
   );
 }
